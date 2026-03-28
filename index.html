@@ -293,7 +293,7 @@
 
       <div class="grid md:grid-cols-2 gap-4">
         <!-- Formspree Contact Form -->
-        <form id="contactForm" class="bg-slate-50 p-4 rounded-lg" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <form id="contactForm" class="bg-slate-50 p-4 rounded-lg" method="POST">
           <label class="block text-xs text-slate-600">Full Name</label>
           <input class="w-full p-2 mt-1 rounded border" type="text" name="name" required />
 
@@ -301,13 +301,14 @@
           <input class="w-full p-2 mt-1 rounded border" type="text" name="contact" required />
 
           <label class="block text-xs text-slate-600 mt-3">Select Service</label>
-          <select class="w-full p-2 mt-1 rounded border" name="service" required>
+          <select class="w-full p-2 mt-1 rounded border" name="order" required>
             <option value="" disabled selected>Choose a service...</option>
             <option value="Electrical">Electrical</option>
             <option value="Plumbing">Plumbing</option>
             <option value="Renovation & Decor">Renovation & Decor</option>
             <option value="Cooling & AC">Cooling & AC</option>
             <option value="Landscaping & Cleaning">Landscaping & Cleaning</option>
+            <option value="Landscaping & Cleaning">Insect Protection</option>
             <option value="Security & Cameras">Security & Cameras</option>
             <option value="Other">Other</option>
           </select>
@@ -423,11 +424,41 @@
     // Simple form handler (demo)
     const contactForm = document.getElementById('contactForm');
     if(contactForm){
-      contactForm.addEventListener('submit', (e)=>{
-        e.preventDefault();
-        alert('Thanks! Your message was sent (demo). We will contact you soon.');
-        e.target.reset();
-      });
+      contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(contactForm);
+
+      const payload = {
+        name: formData.get("name"),
+        contact: formData.get("contact"),
+        order: formData.get("service"), // match Django
+        message: formData.get("message")
+      };
+
+      try {
+        const res = await fetch("https://fixbytek.sirati.space/api/leads", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+          alert("✅ Message sent successfully!");
+          contactForm.reset();
+        } else {
+          alert("❌ Something went wrong: " + data.message);
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("⚠️ Network error. Please try again.");
+      }
+    });
     }
 
     // set year

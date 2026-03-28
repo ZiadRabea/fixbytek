@@ -348,6 +348,7 @@
             <option value="Renovation & Decor">تشطيبات وديكور</option>
             <option value="Cooling & AC">تبريد وتكييف</option>
             <option value="Landscaping & Cleaning">تنسيق حدائق ونظافة</option>
+            <option value="Landscaping & Cleaning">مكافحة الحشرات</option>
             <option value="Security & Cameras">أمن وكاميرات</option>
             <option value="Other">أخرى</option>
           </select>
@@ -460,11 +461,41 @@
 
     const contactForm = document.getElementById('contactForm');
     if(contactForm){
-      contactForm.addEventListener('submit', (e)=>{
-        e.preventDefault();
-        alert('شكرًا لك! تم إرسال رسالتك (نسخة تجريبية). سنتواصل معك قريبًا.');
-        e.target.reset();
-      });
+      contactForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(contactForm);
+
+      const payload = {
+        name: formData.get("name"),
+        contact: formData.get("contact"),
+        order: formData.get("service"), // match Django
+        message: formData.get("message")
+      };
+
+      try {
+        const res = await fetch("https://fixbytek.sirati.space/api/leads", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+          alert("✅ Message sent successfully!");
+          contactForm.reset();
+        } else {
+          alert("❌ Something went wrong: " + data.message);
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("⚠️ Network error. Please try again.");
+      }
+    });
     }
 
     const yearEl = document.getElementById('year');
